@@ -1,9 +1,49 @@
-import json
 import os
-import logging
 import game_master
 
+
+def write_csv(path, header, data):
+    with open(os.path.join(os.getcwd(), path), 'w', encoding='utf-8') as fi:
+        fi.write(','.join(header))
+        fi.write('\n')
+        fi.write('\n'.join(data))
+
+
 def handle_pokemon(data):
+    pokemons = {}
+    for template in data['template']:
+        if 'pokemon' in template['data']:
+            pokemonId = str(int(template['templateId'][1:5]))
+            pokemon = template['data']['pokemon']
+            if pokemonId not in pokemons:
+                pokemons[pokemonId] = {
+                    'Name': pokemon['uniqueId'],
+                    'Form': [pokemon['form']] if 'form' in pokemon else [],
+                    'Base Stamina': pokemon['stats'].get('baseStamina', 0),
+                    'Base Attack': pokemon['stats'].get('baseAttack', 0),
+                    'Base Defence': pokemon['stats'].get('baseDefense', 0),
+                    'Type1': pokemon['type1'],
+                    'Type2': pokemon.get('type2', 'POKEMON_TYPE_NONE'),
+                    'Base Capture Rate': pokemon['encounter'].get('baseCaptureRate', 0),
+                    'Base Flee Rate': pokemon['encounter'].get('baseFleeRate', 0),
+                    'Height (m)': pokemon.get('pokedexHeightM', 0),
+                    'Height SD': pokemon.get('heightStdDev', 0),
+                    'Weight (kg)': pokemon.get('pokedexWeightKg', 0),
+                    'Weight SD': pokemon.get('weightStdDev', 0),
+                    'Candy To Evolve': pokemon.get('candyToEvolve', 0),
+                    'Buddy Candy Distance (km)': pokemon['kmBuddyDistance'],
+                    'Model Height': pokemon['modelHeight'],
+                    'Buddy Size': pokemon.get('buddySize', 'BUDDY_NORMAL'),
+                    'Quick Moves': pokemon.get('quickMoves', []),
+                    'Cinematic Moves': pokemon.get('cinematicMoves', []),
+                }
+            elif 'form' in pokemon:
+                pokemons[pokemonId].setdefault('Form', []).append(pokemon['form'])
+
+            if 'Evolutions' not in pokemons[pokemonId]:
+                if template['data']['templateId'].split('_')[-1] not in ('SHADOW', 'PURIFIED'):
+                    pokemons[pokemonId]['Evolutions'] = pokemon.get('evolutionBranch', [])
+
     pokemon_columns = ['ID', 'Name', 'Form', 'Base Stamina', 'Base Attack', 'Base Defence',
                        'Type1', 'Type2', 'Base Capture Rate', 'Base Flee Rate',
                        'Height (m)', 'Height SD', 'Weight (kg)', 'Weight SD',
@@ -13,44 +53,27 @@ def handle_pokemon(data):
     pokemon_rows = []
     move_rows = []
     evolution_rows = []
-    for template in data['itemTemplates']:
-        if 'pokemonSettings' in template:
-            pokemonId = str(int(template['templateId'][1:5]))
-            settings = template['pokemonSettings']
-            row = [pokemonId, settings['pokemonId'], settings.get('form', ''), settings['stats']['baseStamina'], settings['stats']['baseAttack'], settings['stats']['baseDefense'],
-                   settings['type'], settings.get('type2', 'POKEMON_TYPE_NONE'), settings['encounter'].get('baseCaptureRate', 0), settings['encounter'].get('baseFleeRate', 0),
-                   settings['pokedexHeightM'], settings['heightStdDev'], settings['pokedexWeightKg'], settings['weightStdDev'], settings.get('candyToEvolve', 0), settings['kmBuddyDistance'],
-                   settings['modelHeight'], settings.get('buddySize', 'BUDDY_NORMAL')]
-            pokemon_rows.append(','.join([str(i) for i in row]))
+    for pokemonId, pokemon in pokemons.items():
+        row = f'{pokemonId},'
+        row += ','.join([str(pokemon[col]) for col in pokemon_columns[1:]])
+        pokemon_rows.append(row)
 
-            for quick_move in settings['quickMoves']:
-                for cinematic_move in settings['cinematicMoves']:
-                    row = [pokemonId, settings['pokemonId'], quick_move, cinematic_move]
-                    move_rows.append(','.join([str(i) for i in row]))
+        for quick_move in pokemon['Quick Moves']:
+            for cinematic_move in pokemon['Cinematic Moves']:
+                move_rows.append(','.join([pokemonId, pokemon['Name'], quick_move, cinematic_move]))
 
-            for evolve in settings.get('evolutionBranch', []):
-                row = [pokemonId, settings['pokemonId'], evolve.get('evolution', ''), evolve.get('candyCost', 0)]
-                evolution_rows.append(','.join([str(i) for i in row]))
+        for evolve in pokemon.get('Evolutions', []):
+            if 'evolution' in evolve:
+                row = [pokemonId, pokemon['Name'], evolve['evolution'], evolve['candyCost']]
+            else:
+                row = [pokemonId, pokemon['Name'], evolve['temporaryEvolution'], 0]
+            evolution_rows.append(','.join([str(i) for i in row]))
 
-    file_pokemon = open('{}\pokemon.csv'.format(os.getcwd()), 'w')
-    file_pokemon.write(','.join(pokemon_columns))
-    file_pokemon.write('\n')
-    file_pokemon.write('\n'.join(pokemon_rows))
-    file_pokemon.close()
+    write_csv('pokemon.csv', pokemon_columns, pokemon_rows)
+    write_csv('pokemon_moves.csv', move_columns, move_rows)
+    write_csv('evolution.csv', evolution_columns, evolution_rows)
 
-    file_moves = open('{}\pokemon_moves.csv'.format(os.getcwd()), 'w')
-    file_moves.write(','.join(move_columns))
-    file_moves.write('\n')
-    file_moves.write('\n'.join(move_rows))
-    file_moves.close()
-
-    file_evolution = open('{}\evolution.csv'.format(os.getcwd()), 'w')
-    file_evolution.write(','.join(evolution_columns))
-    file_evolution.write('\n')
-    file_evolution.write('\n'.join(evolution_rows))
-    file_evolution.close()
-
-    logging.info('Done handling Pokemons')
+    print('Done handling Pokemons.')
 
 
 def handle_move(data):
@@ -58,31 +81,23 @@ def handle_move(data):
                'Stamina Loss', 'Duration (ms)', 'Window Start (ms)', 'Window End (ms)']
     quick_rows = []
     cinematic_rows = []
-    for template in data['itemTemplates']:
-        if 'moveSettings' in template:
-            settings = template['moveSettings']
-            row = [int(template['templateId'][1:5]), settings['movementId'], settings['pokemonType'], settings.get('power', 0), settings.get('energyDelta', 0),
-                   settings.get('staminaLossScalar', 0), settings['durationMs'], settings['damageWindowStartMs'], settings['damageWindowEndMs']]
+    for template in data['template']:
+        if 'move' in template['data']:
+            move = template['data']['move']
+            row = [int(template['templateId'][1:5]), move['uniqueId'], move['type'],
+                   move.get('power', 0), move.get('energyDelta', 0),
+                   move.get('staminaLossScalar', 0), move['durationMs'], move['damageWindowStartMs'], move['damageWindowEndMs']]
 
-            if 'FAST' in settings['movementId']:
+            if 'FAST' in move['uniqueId']:
                 quick_rows.append(','.join([str(i) for i in row]))
             else:
                 row[4] = abs(row[4])
                 cinematic_rows.append(','.join([str(i) for i in row]))
 
-    file_quick = open('{}\quick_moves.csv'.format(os.getcwd()), 'w')
-    file_quick.write(','.join(columns))
-    file_quick.write('\n')
-    file_quick.write('\n'.join(quick_rows))
-    file_quick.close()
+    write_csv('quick_moves.csv', columns, quick_rows)
+    write_csv('cinematic_moves.csv', columns, cinematic_rows)
 
-    file_cinematic = open('{}\cinematic_moves.csv'.format(os.getcwd()), 'w')
-    file_cinematic.write(','.join(columns))
-    file_cinematic.write('\n')
-    file_cinematic.write('\n'.join(cinematic_rows))
-    file_cinematic.close()
-
-    logging.info('Done handling moves')
+    print('Done handling moves.')
 
 
 def main():
@@ -93,7 +108,7 @@ def main():
     handle_pokemon(data)
     handle_move(data)
 
-    print('Done')
+    print('All finished.')
 
 
 if __name__ == '__main__':
