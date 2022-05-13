@@ -12,17 +12,17 @@ def write_csv(path, header, data):
 def handle_pokemon(data):
     pokemons = {}
     for template in data['template']:
-        if 'pokemon' in template['data']:
+        if 'pokemonSettings' in template['data']:
             pokemonId = str(int(template['templateId'][1:5]))
-            pokemon = template['data']['pokemon']
+            pokemon = template['data']['pokemonSettings']
             if pokemonId not in pokemons:
                 pokemons[pokemonId] = {
-                    'Name': pokemon['uniqueId'],
+                    'Name': pokemon['pokemonId'],
                     'Form': [pokemon['form']] if 'form' in pokemon else [],
                     'Base Stamina': pokemon['stats'].get('baseStamina', 0),
                     'Base Attack': pokemon['stats'].get('baseAttack', 0),
                     'Base Defence': pokemon['stats'].get('baseDefense', 0),
-                    'Type1': pokemon['type1'],
+                    'Type1': pokemon['type'],
                     'Type2': pokemon.get('type2', 'POKEMON_TYPE_NONE'),
                     'Base Capture Rate': pokemon['encounter'].get('baseCaptureRate', 0),
                     'Base Flee Rate': pokemon['encounter'].get('baseFleeRate', 0),
