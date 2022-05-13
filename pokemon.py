@@ -54,6 +54,7 @@ def handle_pokemon(data):
     move_rows = []
     evolution_rows = []
     for pokemonId, pokemon in pokemons.items():
+        pokemon['Form'] = '/'.join(pokemon['Form'])
         row = f'{pokemonId},'
         row += ','.join([str(pokemon[col]) for col in pokemon_columns[1:]])
         pokemon_rows.append(row)
