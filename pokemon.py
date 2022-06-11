@@ -43,18 +43,15 @@ def handle_pokemon(data):
             for evolution in pokemon.get('evolutionBranch', []):
                 if 'evolution' in evolution or 'temporaryEvolution' in evolution:
                     evolve = evolution.get('evolution', evolution.get('temporaryEvolution'))
-                    for existing in pokemons[pokemonId].setdefault('Evolutions', []):
-                        if evolve == existing.get('evolution', existing.get('temporaryEvolution')):
-                            break
-                    else:
-                        pokemons[pokemonId]['Evolutions'].append(evolution)
+                    form = pokemon.get('form', f'{pokemon["pokemonId"]}_NORMAL')
+                    pokemons[pokemonId].setdefault('Evolutions', {})[form] = evolution
 
     pokemon_columns = ['ID', 'Name', 'Form', 'Base Stamina', 'Base Attack', 'Base Defence',
                        'Type1', 'Type2', 'Base Capture Rate', 'Base Flee Rate',
                        'Height (m)', 'Height SD', 'Weight (kg)', 'Weight SD',
                        'Candy To Evolve', 'Buddy Candy Distance (km)', 'Model Height', 'Buddy Size']
     move_columns = ['ID', 'Name', 'Quick Move', 'Cinematic Move']
-    evolution_columns = ['ID', 'Name', 'Evolution', 'Candy']
+    evolution_columns = ['ID', 'Name', 'Form', 'Evolution', 'Candy']
     pokemon_rows = []
     move_rows = []
     evolution_rows = []
@@ -68,11 +65,11 @@ def handle_pokemon(data):
             for cinematic_move in pokemon['Cinematic Moves']:
                 move_rows.append(','.join([pokemonId, pokemon['Name'], quick_move, cinematic_move]))
 
-        for evolve in pokemon.get('Evolutions', []):
+        for form, evolve in pokemon.get('Evolutions', {}).items():
             if 'evolution' in evolve:
-                row = [pokemonId, pokemon['Name'], evolve['evolution'], evolve['candyCost']]
+                row = [pokemonId, pokemon['Name'], form, evolve['evolution'], evolve['candyCost']]
             else:
-                row = [pokemonId, pokemon['Name'], evolve['temporaryEvolution'], 0]
+                row = [pokemonId, pokemon['Name'], form, evolve['temporaryEvolution'], 0]
             evolution_rows.append(','.join([str(i) for i in row]))
 
     write_csv('pokemon.csv', pokemon_columns, pokemon_rows)
