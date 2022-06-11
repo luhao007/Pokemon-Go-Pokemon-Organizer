@@ -40,9 +40,14 @@ def handle_pokemon(data):
             elif 'form' in pokemon:
                 pokemons[pokemonId].setdefault('Form', []).append(pokemon['form'])
 
-            if 'Evolutions' not in pokemons[pokemonId]:
-                if template['data']['templateId'].split('_')[-1] not in ('SHADOW', 'PURIFIED'):
-                    pokemons[pokemonId]['Evolutions'] = pokemon.get('evolutionBranch', [])
+            for evolution in pokemon.get('evolutionBranch', []):
+                if 'evolution' in evolution or 'temporaryEvolution' in evolution:
+                    evolve = evolution.get('evolution', evolution.get('temporaryEvolution'))
+                    for existing in pokemons[pokemonId].setdefault('Evolutions', []):
+                        if evolve == existing.get('evolution', existing.get('temporaryEvolution')):
+                            break
+                    else:
+                        pokemons[pokemonId]['Evolutions'].append(evolution)
 
     pokemon_columns = ['ID', 'Name', 'Form', 'Base Stamina', 'Base Attack', 'Base Defence',
                        'Type1', 'Type2', 'Base Capture Rate', 'Base Flee Rate',
