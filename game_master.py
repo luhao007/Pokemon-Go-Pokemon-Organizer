@@ -1,8 +1,8 @@
 import urllib.request
 import json
 
-VERSION_FILE = 'https://raw.githubusercontent.com/pokemongo-dev-contrib/pokemongo-game-master/master/versions/latest-version.txt'
-JSON_FILE = 'https://raw.githubusercontent.com/pokemongo-dev-contrib/pokemongo-game-master/master/versions/latest/V2_GAME_MASTER.json'
+VERSION_FILE = 'https://raw.githubusercontent.com/PokeMiners/game_masters/master/latest/timestamp.txt'
+JSON_FILE = 'https://raw.githubusercontent.com/PokeMiners/game_masters/master/latest/latest.json'
 
 def update():
     with open('version.txt', encoding='utf-8') as f:

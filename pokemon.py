@@ -11,14 +11,14 @@ def write_csv(path, header, data):
 
 def handle_pokemon(data):
     pokemons = {}
-    for template in data['template']:
+    for template in data:
         if 'pokemonSettings' in template['data']:
             pokemonId = str(int(template['templateId'][1:5]))
             pokemon = template['data']['pokemonSettings']
             if pokemonId not in pokemons:
                 pokemons[pokemonId] = {
                     'Name': pokemon['pokemonId'],
-                    'Form': [pokemon['form']] if 'form' in pokemon else [],
+                    'Form': [str(pokemon['form'])] if 'form' in pokemon else [],
                     'Base Stamina': pokemon['stats'].get('baseStamina', 0),
                     'Base Attack': pokemon['stats'].get('baseAttack', 0),
                     'Base Defence': pokemon['stats'].get('baseDefense', 0),
@@ -32,13 +32,13 @@ def handle_pokemon(data):
                     'Weight SD': pokemon.get('weightStdDev', 0),
                     'Candy To Evolve': pokemon.get('candyToEvolve', 0),
                     'Buddy Candy Distance (km)': pokemon['kmBuddyDistance'],
-                    'Model Height': pokemon['modelHeight'],
+                    'Model Height': pokemon.get('modelHeight', 0),
                     'Buddy Size': pokemon.get('buddySize', 'BUDDY_NORMAL'),
                     'Quick Moves': pokemon.get('quickMoves', []),
                     'Cinematic Moves': pokemon.get('cinematicMoves', []),
                 }
             elif 'form' in pokemon:
-                pokemons[pokemonId].setdefault('Form', []).append(pokemon['form'])
+                pokemons[pokemonId].setdefault('Form', []).append(str(pokemon['form']))
 
             for evolution in pokemon.get('evolutionBranch', []):
                 if 'evolution' in evolution or 'temporaryEvolution' in evolution:
@@ -67,7 +67,7 @@ def handle_pokemon(data):
 
         for form, evolve in pokemon.get('Evolutions', {}).items():
             if 'evolution' in evolve:
-                row = [pokemonId, pokemon['Name'], form, evolve['evolution'], evolve['candyCost']]
+                row = [pokemonId, pokemon['Name'], form, evolve['evolution'], evolve.get('candyCost', 0)]
             else:
                 row = [pokemonId, pokemon['Name'], form, evolve['temporaryEvolution'], 0]
             evolution_rows.append(','.join([str(i) for i in row]))
@@ -84,7 +84,7 @@ def handle_move(data):
                'Stamina Loss', 'Duration (ms)', 'Window Start (ms)', 'Window End (ms)']
     quick_rows = []
     cinematic_rows = []
-    for template in data['template']:
+    for template in data:
         if 'move' in template['data']:
             move = template['data']['move']
             row = [int(template['templateId'][1:5]), move['uniqueId'], move['type'],
