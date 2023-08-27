@@ -80,25 +80,29 @@ def handle_pokemon(data):
 
 
 def handle_move(data):
-    columns = ['ID', 'Name', 'Pokemon Type', 'Power', 'Energy Gain',
-               'Stamina Loss', 'Duration (ms)', 'Window Start (ms)', 'Window End (ms)']
+    quick_columns = ['ID', 'Name', 'Pokemon Type', 'Power', 'Energy Gain',
+                     'Stamina Loss', 'Duration (ms)', 'Window Start (ms)', 'Window End (ms)',
+                     'Accuracy', 'Critical']
+    cinematic_columns = quick_columns.copy()
+    cinematic_columns[4] = 'Energy Used'
     quick_rows = []
     cinematic_rows = []
     for template in data:
-        if 'move' in template['data']:
-            move = template['data']['move']
-            row = [int(template['templateId'][1:5]), move['uniqueId'], move['type'],
+        if 'moveSettings' in template['data']:
+            move = template['data']['moveSettings']
+            row = [int(template['templateId'][1:5]), move['movementId'], move['pokemonType'],
                    move.get('power', 0), move.get('energyDelta', 0),
-                   move.get('staminaLossScalar', 0), move['durationMs'], move['damageWindowStartMs'], move['damageWindowEndMs']]
+                   move.get('staminaLossScalar', 0), move['durationMs'], move['damageWindowStartMs'],
+                   move['damageWindowEndMs'], move['accuracyChance'], move.get('criticalChance', 0)]
 
-            if 'FAST' in move['uniqueId']:
+            if 'FAST' in str(move['movementId']):
                 quick_rows.append(','.join([str(i) for i in row]))
             else:
                 row[4] = abs(row[4])
                 cinematic_rows.append(','.join([str(i) for i in row]))
 
-    write_csv('quick_moves.csv', columns, quick_rows)
-    write_csv('cinematic_moves.csv', columns, cinematic_rows)
+    write_csv('quick_moves.csv', quick_columns, quick_rows)
+    write_csv('cinematic_moves.csv', cinematic_columns, cinematic_rows)
 
     print('Done handling moves.')
 
