@@ -1,5 +1,8 @@
 import os
-from typing import Any
+from typing import Any, Iterable
+
+import requests
+from tqdm import tqdm
 
 import game_master
 
@@ -9,6 +12,27 @@ def write_csv(path: str, header: list[str], data: list[str]):
         fi.write(",".join(header))
         fi.write("\n")
         fi.write("\n".join(data))
+
+
+def get_pokemon_images(pokemons: Iterable[int]):
+    if not os.path.exists("image"):
+        os.mkdir("image")
+
+    local_path = "image/{id}.png"
+    path = "https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/detail/{id:03d}.png"
+
+    needs_to_download = [
+        id for id in pokemons if not os.path.exists(local_path.format(id=id))
+    ]
+
+    print("Downloading %s pokemon images...", len(needs_to_download))
+
+    for id in tqdm(needs_to_download, desc="Downloading images"):
+        with open(local_path.format(id=id), "wb") as f:
+            res = requests.get(path.format(id=int(id)))
+            f.write(res.content)
+
+    print("Downloading done.")
 
 
 def handle_pokemon(data: game_master.GAME_MASTER_TYPE):
@@ -114,6 +138,8 @@ def handle_pokemon(data: game_master.GAME_MASTER_TYPE):
                     0,
                 ]
             evolution_rows.append(",".join([str(i) for i in row]))
+
+    get_pokemon_images(pokemons.keys())
 
     write_csv("pokemon.csv", pokemon_columns, pokemon_rows)
     write_csv("pokemon_moves.csv", move_columns, move_rows)
