@@ -1,10 +1,9 @@
 import os
 from typing import Any, Iterable
 
+import game_master
 import requests
 from tqdm import tqdm
-
-import game_master
 
 
 def write_csv(path: str, header: list[str], data: list[str]):
@@ -25,21 +24,22 @@ def get_pokemon_images(pokemons: Iterable[int]):
         id for id in pokemons if not os.path.exists(local_path.format(id=id))
     ]
 
-    print("Downloading %s pokemon images...", len(needs_to_download))
+    if needs_to_download:
+        print(f"Downloading {len(needs_to_download)} pokemon images...")
 
-    for id in tqdm(needs_to_download, desc="Downloading images"):
-        with open(local_path.format(id=id), "wb") as f:
-            res = requests.get(path.format(id=int(id)))
-            f.write(res.content)
+        for id in tqdm(needs_to_download, desc="Downloading images"):
+            with open(local_path.format(id=id), "wb") as f:
+                res = requests.get(path.format(id=int(id)))
+                f.write(res.content)
 
-    print("Downloading done.")
+        print("Downloading done.")
 
 
 def handle_pokemon(data: game_master.GAME_MASTER_TYPE):
-    pokemons: dict[str, Any] = {}
+    pokemons: dict[int, Any] = {}
     for template in data:
         if "pokemonSettings" in template["data"]:
-            pokemonId = str(int(template["templateId"][1:5]))
+            pokemonId = int(template["templateId"][1:5])
             pokemon: dict[str, Any] = template["data"]["pokemonSettings"]
             if pokemonId not in pokemons:
                 stats: dict[str, int] = pokemon["stats"]
@@ -112,7 +112,7 @@ def handle_pokemon(data: game_master.GAME_MASTER_TYPE):
                 move_rows.append(
                     ",".join(
                         [
-                            pokemonId,
+                            str(pokemonId),
                             str(pokemon["Name"]),
                             quick_move,
                             str(cinematic_move),
