@@ -17,22 +17,29 @@ def get_pokemon_images(pokemons: Iterable[int]):
     if not os.path.exists("image"):
         os.mkdir("image")
 
-    local_path = "image/{id}.png"
-    path = "https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/detail/{id:03d}.png"
+    if not os.path.exists("image128"):
+        os.mkdir("image128")
 
-    needs_to_download = [
-        id for id in pokemons if not os.path.exists(local_path.format(id=id))
+    local_paths = ["image/{id}.png", "image128/{id}.png"]
+    paths = [
+        "https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/detail/{id:03d}.png",
+        "https://resource.pokemon-home.com/battledata/img/pokei128/icon{id:04d}_f00_s0.png",
     ]
 
-    if needs_to_download:
-        print(f"Downloading {len(needs_to_download)} pokemon images...")
+    for local_path, path in zip(local_paths, paths):
+        needs_to_download = [
+            id for id in pokemons if not os.path.exists(local_path.format(id=id))
+        ]
 
-        for id in tqdm(needs_to_download, desc="Downloading images"):
-            with open(local_path.format(id=id), "wb") as f:
-                res = requests.get(path.format(id=int(id)))
-                f.write(res.content)
+        if needs_to_download:
+            print(f"Downloading {len(needs_to_download)} pokemon images...")
 
-        print("Downloading done.")
+            for id in tqdm(needs_to_download, desc="Downloading images"):
+                with open(local_path.format(id=id), "wb") as f:
+                    res = requests.get(path.format(id=int(id)))
+                    f.write(res.content)
+
+            print("Downloading done.")
 
 
 def handle_pokemon(data: game_master.GAME_MASTER_TYPE):
@@ -64,6 +71,7 @@ def handle_pokemon(data: game_master.GAME_MASTER_TYPE):
                     "Buddy Size": pokemon.get("buddySize", "BUDDY_NORMAL"),
                     "Quick Moves": pokemon.get("quickMoves", []),
                     "Cinematic Moves": pokemon.get("cinematicMoves", []),
+                    "Class": pokemon.get("pokemonClass", "NONE"),
                 }
             elif "form" in pokemon:
                 pokemons[pokemonId].setdefault("Form", []).append(str(pokemon["form"]))
@@ -95,6 +103,7 @@ def handle_pokemon(data: game_master.GAME_MASTER_TYPE):
         "Buddy Candy Distance (km)",
         "Model Height",
         "Buddy Size",
+        "Class",
     ]
     move_columns = ["ID", "Name", "Quick Move", "Cinematic Move"]
     evolution_columns = ["ID", "Name", "Form", "Evolution", "Candy"]
