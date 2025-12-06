@@ -82,7 +82,9 @@ def handle_pokemon(data: game_master.GAME_MASTER_TYPE):
                         "evolution", evolution.get("temporaryEvolution")
                     )
                     form = pokemon.get("form", f'{pokemon["pokemonId"]}_NORMAL')
-                    pokemons[pokemonId].setdefault("Evolutions", {})[form] = evolution
+                    pokemons[pokemonId].setdefault("Evolutions", []).append(
+                        [form, evolution]
+                    )
 
     pokemon_columns = [
         "ID",
@@ -129,7 +131,7 @@ def handle_pokemon(data: game_master.GAME_MASTER_TYPE):
                     )
                 )
 
-        for form, evolve in pokemon.get("Evolutions", {}).items():
+        for form, evolve in pokemon.get("Evolutions", []):
             if "evolution" in evolve:
                 row = [
                     pokemonId,
@@ -146,7 +148,9 @@ def handle_pokemon(data: game_master.GAME_MASTER_TYPE):
                     evolve["temporaryEvolution"],
                     0,
                 ]
-            evolution_rows.append(",".join([str(i) for i in row]))
+            evolution_row = ",".join([str(i) for i in row])
+            if evolution_row not in evolution_rows:
+                evolution_rows.append(evolution_row)
 
     get_pokemon_images(pokemons.keys())
 
