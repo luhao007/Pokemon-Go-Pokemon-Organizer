@@ -1,4 +1,4 @@
-ID,Name,Form,Base Stamina,Base Attack,Base Defence,Type1,Type2,Base Capture Rate,Base Flee Rate,Height (m),Height SD,Weight (kg),Weight SD,Candy To Evolve,Buddy Candy Distance (km),Model Height,Buddy Size,Class
+ID,Name,Form,Base Stamina,Base Attack,Base Defense,Type1,Type2,Base Capture Rate,Base Flee Rate,Height (m),Height SD,Weight (kg),Weight SD,Candy To Evolve,Buddy Candy Distance (km),Model Height,Buddy Size,Class
 1,BULBASAUR,BULBASAUR_FALL_2019/BULBASAUR_NORMAL,128,118,111,POKEMON_TYPE_GRASS,POKEMON_TYPE_POISON,0,0,0.7,0.0875,6.9,0.8625,25,3.0,0.7,BUDDY_NORMAL,NONE
 2,IVYSAUR,IVYSAUR_NORMAL,155,151,143,POKEMON_TYPE_GRASS,POKEMON_TYPE_POISON,0,0,1.0,0.125,13.0,1.625,100,3.0,1.25,BUDDY_BIG,NONE
 3,VENUSAUR,VENUSAUR_COPY_2019/VENUSAUR_NORMAL,190,198,189,POKEMON_TYPE_GRASS,POKEMON_TYPE_POISON,0,0,2.0,0.25,100.0,12.5,0,3.0,1.9,BUDDY_BIG,NONE
