@@ -20,9 +20,10 @@ def get_pokemon_images(pokemons: Iterable[int]):
     if not os.path.exists("image128"):
         os.mkdir("image128")
 
-    local_paths = ["image/{id}.png", "image128/{id}.png"]
+    local_paths = ["image/{id}.png", "imagefull/{id}.png", "image128/{id}.png"]
     paths = [
         "https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/detail/{id:03d}.png",
+        "https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/full/{id:03d}.png",
         "https://resource.pokemon-home.com/battledata/img/pokei128/icon{id:04d}_f00_s0.png",
     ]
 
