@@ -47,7 +47,8 @@ def get_pokemon_images(pokemons: Iterable[int]):
 
 
 def handle_pokemon(data: game_master.GAME_MASTER_TYPE):
-    pokemons: dict[int, Any] = {}
+    pokemons: dict[int, dict[str, Any]] = {}
+    gender_info: dict[int, dict[str, int]] = {}
     for template in data:
         if "pokemonSettings" in template["data"]:
             pokemonId = int(template["templateId"][1:5])
@@ -96,6 +97,20 @@ def handle_pokemon(data: game_master.GAME_MASTER_TYPE):
                     pokemons[pokemonId].setdefault("Evolutions", []).append(
                         [form, evolution]
                     )
+        elif "genderSettings" in template["data"]:
+            # Spawn setting
+            pokemonId = int(template["templateId"][7:11])
+            if pokemonId not in gender_info:
+                gender = template["data"]["genderSettings"]["gender"]
+                gender_info[pokemonId] = {
+                    "Male Percent": gender.get("malePercent", 0),
+                    "Female Percent": gender.get("femalePercent", 0),
+                    "Genderless Percent": gender.get("genderlessPercent", 0),
+                }
+
+    for pid, gender_data in gender_info.items():
+        if pid in pokemons:
+            pokemons[pid].update(gender_data)
 
     pokemon_columns = [
         "ID",
@@ -118,6 +133,9 @@ def handle_pokemon(data: game_master.GAME_MASTER_TYPE):
         "Buddy Size",
         "Class",
         "Family",
+        "Male Percent",
+        "Female Percent",
+        "Genderless Percent",
         "Stardust To Unlock Move",
         "Candy To Unlock Move",
         "isTransferable",
