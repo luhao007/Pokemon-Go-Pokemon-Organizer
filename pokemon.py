@@ -16,11 +16,14 @@ def write_csv(path: str, header: list[str], data: list[str]):
 def get_pokemon_images(pokemons: Iterable[int]):
     if not os.path.exists("image"):
         os.mkdir("image")
+    if not os.path.exists("image/small"):
+        os.mkdir("image/small")
+    if not os.path.exists("image/full"):
+        os.mkdir("image/full")
+    if not os.path.exists("image/128"):
+        os.mkdir("image/128")
 
-    if not os.path.exists("image128"):
-        os.mkdir("image128")
-
-    local_paths = ["image/{id}.png", "imagefull/{id}.png", "image128/{id}.png"]
+    local_paths = ["image/small/{id}.png", "image/full/{id}.png", "image/128/{id}.png"]
     paths = [
         "https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/detail/{id:03d}.png",
         "https://www.pokemon.com/static-assets/content-assets/cms2/img/pokedex/full/{id:03d}.png",
@@ -52,6 +55,7 @@ def handle_pokemon(data: game_master.GAME_MASTER_TYPE):
             if pokemonId not in pokemons:
                 stats: dict[str, int] = pokemon["stats"]
                 encounter: dict[str, int] = pokemon["encounter"]
+                thridMove: dict[str, int] = pokemon.get("thirdMove", {})
                 pokemons[pokemonId] = {
                     "Name": pokemon["pokemonId"],
                     "Form": [str(pokemon["form"])] if "form" in pokemon else [],
@@ -73,6 +77,12 @@ def handle_pokemon(data: game_master.GAME_MASTER_TYPE):
                     "Quick Moves": pokemon.get("quickMoves", []),
                     "Cinematic Moves": pokemon.get("cinematicMoves", []),
                     "Class": pokemon.get("pokemonClass", "NONE"),
+                    "Family": pokemon.get("familyId", "NONE"),
+                    "Stardust To Unlock Move": thridMove.get("stardustToUnlock", 0),
+                    "Candy To Unlock Move": thridMove.get("candyToUnlock", 0),
+                    "isTransferable": pokemon.get("isTransferable", False),
+                    "isDeployable": pokemon.get("isDeployable", False),
+                    "isTradable": pokemon.get("isTradable", False),
                 }
             elif "form" in pokemon:
                 pokemons[pokemonId].setdefault("Form", []).append(str(pokemon["form"]))
@@ -107,6 +117,12 @@ def handle_pokemon(data: game_master.GAME_MASTER_TYPE):
         "Model Height",
         "Buddy Size",
         "Class",
+        "Family",
+        "Stardust To Unlock Move",
+        "Candy To Unlock Move",
+        "isTransferable",
+        "isDeployable",
+        "isTradable",
     ]
     move_columns = ["ID", "Name", "Quick Move", "Cinematic Move"]
     evolution_columns = ["ID", "Name", "Form", "Evolution", "Candy"]
